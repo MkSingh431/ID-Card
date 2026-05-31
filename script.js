@@ -21,6 +21,7 @@ const fields = {
 const preview = {
   cardNumber: document.querySelector("#previewCardNumber"),
   backCardNumber: document.querySelector("#previewBackCardNumber"),
+  idNumber: document.querySelector("#previewIdNumber"),
   name: document.querySelector("#previewName"),
   fatherName: document.querySelector("#previewFatherName"),
   mobile: document.querySelector("#previewMobile"),
@@ -28,6 +29,7 @@ const preview = {
   address: document.querySelector("#previewAddress"),
   photo: document.querySelector("#previewPhoto"),
   photoFrame: document.querySelector(".photo-frame"),
+  watermarkScaleValue: document.querySelector("#watermarkScaleValue"),
 };
 
 const errors = {
@@ -292,12 +294,18 @@ function fitAddressPreview() {
 
 function updatePreview() {
   fields.cardNumber.value = state.cardNumber;
-  preview.cardNumber.textContent = state.cardNumber;
+  if (preview.cardNumber) preview.cardNumber.textContent = state.cardNumber;
   preview.backCardNumber.textContent = `ID No: ${state.cardNumber}`;
   setText(preview.name, fields.fullName.value);
   setText(preview.fatherName, fields.fatherName.value);
   setText(preview.mobile, fields.mobileNumber.value);
+  // ID number under mobile on the front preview
+  preview.idNumber.textContent = state.cardNumber || EMPTY_TEXT;
   preview.backMobile.textContent = `Mobile: ${normalizeSpaces(fields.mobileNumber.value) || EMPTY_TEXT}`;
+  // watermark scale preview label
+  const scaleEl = document.querySelector("#watermarkScale");
+  const scale = parseFloat(scaleEl?.value || 0.75);
+  if (preview.watermarkScaleValue) preview.watermarkScaleValue.textContent = `${Math.round(scale * 100)}%`;
   const formattedAddress = formatAddress();
   preview.address.textContent = formattedAddress || EMPTY_TEXT;
   preview.address.classList.toggle("is-empty", !formattedAddress);
@@ -589,7 +597,7 @@ function drawHeader(ctx, x, y, width, height, compact = false) {
   return headerHeight;
 }
 
-function drawFrontCard(ctx, x, y, width, height, data, image) {
+function drawFrontCard(ctx, x, y, width, height, data, image, sideLogoImage) {
   drawCardShell(ctx, x, y, width, height);
   const headerHeight = drawHeader(ctx, x, y, width, height, false);
 
@@ -602,9 +610,7 @@ function drawFrontCard(ctx, x, y, width, height, data, image) {
   ctx.font = '800 24px "Nirmala UI", "Mangal", Arial, sans-serif';
   ctx.fillText("पहचान पत्र", x + 198, y + 126);
   ctx.font = '900 22px "Nirmala UI", "Mangal", Arial, sans-serif';
-  const idText = `ID No: ${data.cardNumber}`;
-  const idTextWidth = ctx.measureText(idText).width;
-  ctx.fillText(idText, x + width - 62 - idTextWidth, y + 74);
+  // Top-right ID removed per user request. ID is shown elsewhere on card.
 
   const photoX = x + 72;
   const photoY = y + headerHeight + 52;
@@ -657,6 +663,18 @@ function drawFrontCard(ctx, x, y, width, height, data, image) {
   ctx.fillStyle = "#ffffff";
   ctx.font = '800 24px "Nirmala UI", "Mangal", Arial, sans-serif';
   ctx.fillText("Cultural Identity Card", x + 62, y + height - 21);
+
+  // Draw right-side top logo image if provided
+  if (sideLogoImage) {
+    try {
+      const logoSize = 86;
+      const logoX = x + width - 22 - logoSize; // align inside inner frame
+      const logoY = y + 20;
+      ctx.drawImage(sideLogoImage, logoX, logoY, logoSize, logoSize);
+    } catch (err) {
+      // ignore draw errors
+    }
+  }
 }
 
 function drawBackCard(ctx, x, y, width, height, data) {
@@ -757,11 +775,36 @@ async function generateCompositeCard() {
   const image = await loadImageFromDataUrl(state.photoDataUrl);
   let watermarkImage = null;
   try {
-    watermarkImage = await loadImageFromUrl("sanatani hindu.jpg");
-  } catch (e) {
-    // No watermark available; continue without it.
-    watermarkImage = null;
+    // Prefer jay.jpg, then hm.avif, then ram.jpg, then hanuman.avif, then watermark.png
+    watermarkImage = await loadImageFromUrl("jay.jpg");
+  } catch (e1) {
+    try {
+      watermarkImage = await loadImageFromUrl("hm.avif");
+    } catch (e2) {
+      try {
+        watermarkImage = await loadImageFromUrl("ram.jpg");
+      } catch (e3) {
+        try {
+          watermarkImage = await loadImageFromUrl("hanuman.avif");
+        } catch (e4) {
+          try {
+            watermarkImage = await loadImageFromUrl("watermark.png");
+          } catch (e5) {
+            watermarkImage = null;
+          }
+        }
+      }
+    }
   }
+
+  // Load the right-side top logo if present
+  let sideLogoImage = null;
+  try {
+    sideLogoImage = await loadImageFromUrl("hanu.jpg");
+  } catch (err) {
+    sideLogoImage = null;
+  }
+
   const sideWidth = 1020;
   const sideHeight = 643;
   const margin = 48;
@@ -773,10 +816,18 @@ async function generateCompositeCard() {
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#f8f7f4";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawFrontCard(ctx, margin, margin, sideWidth, sideHeight, data, image);
-  if (watermarkImage) drawWatermark(ctx, watermarkImage, margin, margin, sideWidth, sideHeight, { opacity: 0.12, rotationDeg: -18, scale: 0.75 });
+  drawFrontCard(ctx, margin, margin, sideWidth, sideHeight, data, image, sideLogoImage);
+  if (watermarkImage) {
+    const scaleEl = document.querySelector("#watermarkScale");
+    const wmScale = parseFloat(scaleEl?.value || 0.75);
+    drawWatermark(ctx, watermarkImage, margin, margin, sideWidth, sideHeight, { opacity: 0.12, rotationDeg: -18, scale: wmScale });
+  }
   drawBackCard(ctx, margin, margin + sideHeight + gap, sideWidth, sideHeight, data);
-  if (watermarkImage) drawWatermark(ctx, watermarkImage, margin, margin + sideHeight + gap, sideWidth, sideHeight, { opacity: 0.25, rotationDeg: -18, scale: 0.90 });
+  if (watermarkImage) {
+    const scaleEl2 = document.querySelector("#watermarkScale");
+    const wmScale2 = parseFloat(scaleEl2?.value || 0.75);
+    drawWatermark(ctx, watermarkImage, margin, margin + sideHeight + gap, sideWidth, sideHeight, { opacity: 0.25, rotationDeg: -18, scale: Math.min(1.0, wmScale2 + 0.15) });
+  }
   return canvas;
 }
 
@@ -877,6 +928,14 @@ fields.photo.addEventListener("change", handlePhotoChange);
 form.addEventListener("submit", handleSubmit);
 resetBtn.addEventListener("click", resetForm);
 window.addEventListener("resize", fitAddressPreview);
+
+// Watermark scale control wiring
+const watermarkControl = document.querySelector("#watermarkScale");
+if (watermarkControl) {
+  watermarkControl.addEventListener("input", () => {
+    updatePreview();
+  });
+}
 
 populateStateOptions();
 populateDistrictOptions("");

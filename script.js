@@ -29,7 +29,7 @@ const preview = {
   address: document.querySelector("#previewAddress"),
   photo: document.querySelector("#previewPhoto"),
   photoFrame: document.querySelector(".photo-frame"),
-  watermarkScaleValue: document.querySelector("#watermarkScaleValue"),
+  // watermark UI removed
 };
 
 const errors = {
@@ -195,6 +195,7 @@ function populateDistrictOptions(stateName, selectedDistrict = "") {
 
 function generateCardNumber() {
   const timestampPart = String(Date.now()).slice(-8);
+  // Use 4-digit random portion to create a 12-digit ID (8+4)
   let randomValue = Math.floor(Math.random() * 10000);
 
   if (window.crypto?.getRandomValues) {
@@ -204,6 +205,12 @@ function generateCardNumber() {
   }
 
   return `${timestampPart}${String(randomValue).padStart(4, "0")}`;
+}
+
+function formatCardNumberForDisplay(num) {
+  if (!num) return "";
+  const digits = String(num).replace(/\D/g, "");
+  return digits.replace(/(.{4})/g, "$1 ").trim();
 }
 
 function setText(element, value, fallback = EMPTY_TEXT) {
@@ -294,18 +301,15 @@ function fitAddressPreview() {
 
 function updatePreview() {
   fields.cardNumber.value = state.cardNumber;
-  if (preview.cardNumber) preview.cardNumber.textContent = state.cardNumber;
-  preview.backCardNumber.textContent = `ID No: ${state.cardNumber}`;
+  if (preview.cardNumber) preview.cardNumber.textContent = formatCardNumberForDisplay(state.cardNumber) || EMPTY_TEXT;
+  preview.backCardNumber.textContent = formatCardNumberForDisplay(state.cardNumber) || EMPTY_TEXT;
   setText(preview.name, fields.fullName.value);
   setText(preview.fatherName, fields.fatherName.value);
   setText(preview.mobile, fields.mobileNumber.value);
   // ID number under mobile on the front preview
-  preview.idNumber.textContent = state.cardNumber || EMPTY_TEXT;
+  preview.idNumber.textContent = formatCardNumberForDisplay(state.cardNumber) || EMPTY_TEXT;
   preview.backMobile.textContent = `Mobile: ${normalizeSpaces(fields.mobileNumber.value) || EMPTY_TEXT}`;
-  // watermark scale preview label
-  const scaleEl = document.querySelector("#watermarkScale");
-  const scale = parseFloat(scaleEl?.value || 0.75);
-  if (preview.watermarkScaleValue) preview.watermarkScaleValue.textContent = `${Math.round(scale * 100)}%`;
+  // watermark removed
   const formattedAddress = formatAddress();
   preview.address.textContent = formattedAddress || EMPTY_TEXT;
   preview.address.classList.toggle("is-empty", !formattedAddress);
@@ -653,6 +657,11 @@ function drawFrontCard(ctx, x, y, width, height, data, image, sideLogoImage) {
     ctx.stroke();
   });
 
+  const idNumY = detailY + 2 * 105 + 74; // Under mobile row
+  ctx.fillStyle = "#6d6259";
+  ctx.font = '800 48px "Nirmala UI", "Mangal", Arial, sans-serif';
+  ctx.fillText(formatCardNumberForDisplay(data.cardNumber), detailX, idNumY + 44);
+
   ctx.save();
   roundedRect(ctx, x, y, width, height, 28);
   ctx.clip();
@@ -721,8 +730,8 @@ function drawBackCard(ctx, x, y, width, height, data) {
   ctx.stroke();
 
   ctx.fillStyle = "#6d6259";
-  ctx.font = '800 22px "Nirmala UI", "Mangal", Arial, sans-serif';
-  ctx.fillText(`ID No: ${data.cardNumber}`, x + 70, y + height - 48);
+  ctx.font = '800 48px "Nirmala UI", "Mangal", Arial, sans-serif';
+  ctx.fillText(`${formatCardNumberForDisplay(data.cardNumber)}`, x + 70, y + height - 48);
   const mobileText = `Mobile: ${data.mobile}`;
   const mobileWidth = ctx.measureText(mobileText).width;
   ctx.fillText(mobileText, x + width - 70 - mobileWidth, y + height - 48);
@@ -747,55 +756,12 @@ function loadImageFromUrl(url) {
   });
 }
 
-function drawWatermark(ctx, image, x, y, width, height, options = {}) {
-  if (!image) return;
-  const opacity = options.opacity ?? 0.12;
-  const rotation = (options.rotationDeg ?? -18) * (Math.PI / 180);
-  const scale = options.scale ?? 0.72;
-
-  ctx.save();
-  ctx.globalAlpha = opacity;
-
-  const cx = x + width / 2;
-  const cy = y + height / 2;
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation);
-
-  // Fit watermark by width of card
-  const targetW = width * scale;
-  const aspect = image.height / image.width;
-  const targetH = targetW * aspect;
-
-  ctx.drawImage(image, -targetW / 2, -targetH / 2, targetW, targetH);
-  ctx.restore();
-}
+// watermark drawing removed
 
 async function generateCompositeCard() {
   const data = getCardData();
   const image = await loadImageFromDataUrl(state.photoDataUrl);
-  let watermarkImage = null;
-  try {
-    // Prefer jay.jpg, then hm.avif, then ram.jpg, then hanuman.avif, then watermark.png
-    watermarkImage = await loadImageFromUrl("jay.jpg");
-  } catch (e1) {
-    try {
-      watermarkImage = await loadImageFromUrl("hm.avif");
-    } catch (e2) {
-      try {
-        watermarkImage = await loadImageFromUrl("ram.jpg");
-      } catch (e3) {
-        try {
-          watermarkImage = await loadImageFromUrl("hanuman.avif");
-        } catch (e4) {
-          try {
-            watermarkImage = await loadImageFromUrl("watermark.png");
-          } catch (e5) {
-            watermarkImage = null;
-          }
-        }
-      }
-    }
-  }
+  // watermark image loading removed
 
   // Load the right-side top logo if present
   let sideLogoImage = null;
@@ -817,17 +783,7 @@ async function generateCompositeCard() {
   ctx.fillStyle = "#f8f7f4";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawFrontCard(ctx, margin, margin, sideWidth, sideHeight, data, image, sideLogoImage);
-  if (watermarkImage) {
-    const scaleEl = document.querySelector("#watermarkScale");
-    const wmScale = parseFloat(scaleEl?.value || 0.75);
-    drawWatermark(ctx, watermarkImage, margin, margin, sideWidth, sideHeight, { opacity: 0.12, rotationDeg: -18, scale: wmScale });
-  }
   drawBackCard(ctx, margin, margin + sideHeight + gap, sideWidth, sideHeight, data);
-  if (watermarkImage) {
-    const scaleEl2 = document.querySelector("#watermarkScale");
-    const wmScale2 = parseFloat(scaleEl2?.value || 0.75);
-    drawWatermark(ctx, watermarkImage, margin, margin + sideHeight + gap, sideWidth, sideHeight, { opacity: 0.25, rotationDeg: -18, scale: Math.min(1.0, wmScale2 + 0.15) });
-  }
   return canvas;
 }
 
@@ -929,13 +885,7 @@ form.addEventListener("submit", handleSubmit);
 resetBtn.addEventListener("click", resetForm);
 window.addEventListener("resize", fitAddressPreview);
 
-// Watermark scale control wiring
-const watermarkControl = document.querySelector("#watermarkScale");
-if (watermarkControl) {
-  watermarkControl.addEventListener("input", () => {
-    updatePreview();
-  });
-}
+// watermark control removed
 
 populateStateOptions();
 populateDistrictOptions("");

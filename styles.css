@@ -360,23 +360,7 @@ input[readonly] {
   box-shadow: 0 12px 30px rgba(36, 24, 12, 0.13);
 }
 
-/* Watermark overlay for preview */
-.watermark-overlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-.watermark-overlay img {
-  max-width: 90%;
-  max-height: 90%;
-  opacity: 0.25;
-  transform: rotate(-18deg);
-  filter: saturate(0.6) contrast(0.95);
-  user-select: none;
-}
+/* Watermark preview removed */
 
 .id-card::after {
   content: "";
@@ -508,6 +492,19 @@ input[readonly] {
   font-size: 0.7rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+/* Larger ID number styling */
+#previewIdNumber {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+#previewBackCardNumber {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .identity-list dd {

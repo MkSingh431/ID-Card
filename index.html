@@ -65,7 +65,7 @@
               aria-describedby="mobileHint mobileNumberError"
             />
             <p id="mobileHint" class="field-hint">Use 7 to 15 digits. A leading + is accepted.</p>
-            <p id="mobileNumberError" class="field-error" aria-live="polite"></p>
+            <p id="mobileNumberError" class="field-error" aria-live="polite" style="font-size: 40px;"></p>
           </div>
 
           <fieldset class="address-section">
@@ -128,9 +128,7 @@
           </div>
 
           <div class="field">
-            <label for="watermarkScale">Watermark size</label>
-            <input id="watermarkScale" name="watermarkScale" type="range" min="0.2" max="1.2" step="0.01" value="0.75" />
-            <p class="field-hint">Adjust watermark size (preview and exported card) — <span id="watermarkScaleValue">75%</span></p>
+            <!-- watermark control removed -->
           </div>
 
           <div class="form-actions">
@@ -152,9 +150,7 @@
 
           <div class="card-stage">
             <article class="id-card front-card" aria-label="Front side ID card preview">
-                <div class="watermark-overlay" aria-hidden="true">
-                     <img src="jay.jpg" alt="" />
-                </div>
+                 <!-- watermark removed -->
               <div class="card-header">
                 <div class="card-logo" aria-hidden="true">ॐ</div>
                 <img class="side-top-logo" src="hanu.jpg" alt="" aria-hidden="true" />
@@ -184,8 +180,7 @@
                     <dt>Mobile</dt>
                     <dd id="previewMobile">Not entered</dd>
                     </div>
-                    <div>
-                      <dt>ID No.</dt>
+                  <div>
                       <dd id="previewIdNumber">Not assigned</dd>
                   </div>
                 </dl>
@@ -195,9 +190,7 @@
             </article>
 
             <article class="id-card back-card" aria-label="Back side ID card preview">
-              <div class="watermark-overlay" aria-hidden="true">
-                <img src="jay.jpg" alt="" />
-              </div>
+              <!-- watermark removed -->
               <div class="card-header compact">
                 <img class="side-top-logo" src="hanu.jpg" alt="" aria-hidden="true" />
                 <div class="card-logo small" aria-hidden="true">ॐ</div>
@@ -213,7 +206,7 @@
               </div>
 
               <div class="back-footer">
-                <span id="previewBackCardNumber">ID No.</span>
+                <span id="previewBackCardNumber">Not entered</span>
                 <span id="previewBackMobile">Mobile: Not entered</span>
               </div>
             </article>

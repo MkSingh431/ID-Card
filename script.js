@@ -719,9 +719,49 @@ function loadImageFromDataUrl(dataUrl) {
   });
 }
 
+function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Could not load image: ${url}`));
+    image.src = url;
+  });
+}
+
+function drawWatermark(ctx, image, x, y, width, height, options = {}) {
+  if (!image) return;
+  const opacity = options.opacity ?? 0.12;
+  const rotation = (options.rotationDeg ?? -18) * (Math.PI / 180);
+  const scale = options.scale ?? 0.72;
+
+  ctx.save();
+  ctx.globalAlpha = opacity;
+
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+
+  // Fit watermark by width of card
+  const targetW = width * scale;
+  const aspect = image.height / image.width;
+  const targetH = targetW * aspect;
+
+  ctx.drawImage(image, -targetW / 2, -targetH / 2, targetW, targetH);
+  ctx.restore();
+}
+
 async function generateCompositeCard() {
   const data = getCardData();
   const image = await loadImageFromDataUrl(state.photoDataUrl);
+  let watermarkImage = null;
+  try {
+    watermarkImage = await loadImageFromUrl("sanatani hindu.jpg");
+  } catch (e) {
+    // No watermark available; continue without it.
+    watermarkImage = null;
+  }
   const sideWidth = 1020;
   const sideHeight = 643;
   const margin = 48;
@@ -734,7 +774,9 @@ async function generateCompositeCard() {
   ctx.fillStyle = "#f8f7f4";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawFrontCard(ctx, margin, margin, sideWidth, sideHeight, data, image);
+  if (watermarkImage) drawWatermark(ctx, watermarkImage, margin, margin, sideWidth, sideHeight, { opacity: 0.12, rotationDeg: -18, scale: 0.75 });
   drawBackCard(ctx, margin, margin + sideHeight + gap, sideWidth, sideHeight, data);
+  if (watermarkImage) drawWatermark(ctx, watermarkImage, margin, margin + sideHeight + gap, sideWidth, sideHeight, { opacity: 0.25, rotationDeg: -18, scale: 0.90 });
   return canvas;
 }
 

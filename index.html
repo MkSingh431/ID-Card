@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sanatan Hindu ID Card Generator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand-lockup">
+          <div class="brand-logo" aria-hidden="true">ॐ</div>
+          <div>
+            <p class="eyebrow">Personal ID Card Generator</p>
+            <h1>सनातन हिंदू ID Card</h1>
+          </div>
+        </div>
+        <p class="header-copy">
+          Add the required details, review both sides, and download a clean printable card.
+        </p>
+      </header>
+
+      <section class="workspace" aria-label="ID card generator workspace">
+        <form id="idForm" class="form-panel" novalidate>
+          <div class="panel-heading">
+            <p class="eyebrow">Card details</p>
+            <h2>Enter information</h2>
+          </div>
+
+          <ol class="process-list" aria-label="Steps">
+            <li>Fill identity and address fields.</li>
+            <li>Upload a clear portrait photo.</li>
+            <li>Check the preview before downloading.</li>
+          </ol>
+
+          <div class="field generated-field">
+            <label for="cardNumber">Generated ID number</label>
+            <input id="cardNumber" name="cardNumber" type="text" readonly aria-describedby="cardNumberHint" />
+            <p id="cardNumberHint" class="field-hint">Automatically created 12-digit number included on the card.</p>
+          </div>
+
+          <div class="field">
+            <label for="fullName">Full name</label>
+            <input id="fullName" name="fullName" type="text" autocomplete="name" required maxlength="60" />
+            <p id="fullNameError" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="fatherName">Father's name</label>
+            <input id="fatherName" name="fatherName" type="text" required maxlength="60" />
+            <p id="fatherNameError" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="mobileNumber">Mobile number</label>
+            <input
+              id="mobileNumber"
+              name="mobileNumber"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
+              required
+              maxlength="18"
+              aria-describedby="mobileHint mobileNumberError"
+            />
+            <p id="mobileHint" class="field-hint">Use 7 to 15 digits. A leading + is accepted.</p>
+            <p id="mobileNumberError" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <fieldset class="address-section">
+            <legend>Address details</legend>
+
+            <div class="address-grid">
+              <div class="field">
+                <label for="villageCity">Village/City</label>
+                <input id="villageCity" name="villageCity" type="text" required maxlength="60" />
+                <p id="villageCityError" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label for="postOffice">Post Office</label>
+                <input id="postOffice" name="postOffice" type="text" required maxlength="60" />
+                <p id="postOfficeError" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label for="policeStation">Police Station</label>
+                <input id="policeStation" name="policeStation" type="text" required maxlength="60" />
+                <p id="policeStationError" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label for="pincode">Pincode</label>
+                <input id="pincode" name="pincode" type="text" inputmode="numeric" required maxlength="6" />
+                <p id="pincodeError" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label for="stateName">State</label>
+                <select id="stateName" name="stateName" required>
+                  <option value="">Select state</option>
+                </select>
+                <p id="stateNameError" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label for="district">District</label>
+                <select id="district" name="district" required disabled>
+                  <option value="">Select state first</option>
+                </select>
+                <p id="districtError" class="field-error" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="photo">Photo</label>
+            <input
+              id="photo"
+              name="photo"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              required
+            />
+            <p class="field-hint">Use a JPG, PNG, or WebP image under 5 MB.</p>
+            <p id="photoError" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <div class="form-actions">
+            <button id="resetBtn" class="button button-secondary" type="button">Clear</button>
+            <button id="downloadBtn" class="button button-primary" type="submit">Download ID card</button>
+          </div>
+
+          <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <section class="preview-panel" aria-labelledby="previewTitle">
+          <div class="preview-heading">
+            <div>
+              <p class="eyebrow">Preview</p>
+              <h2 id="previewTitle">Front and back</h2>
+            </div>
+            <span id="previewState" class="preview-state">Waiting for details</span>
+          </div>
+
+          <div class="card-stage">
+            <article class="id-card front-card" aria-label="Front side ID card preview">
+              <div class="card-header">
+                <div class="card-logo" aria-hidden="true">ॐ</div>
+                <div>
+                  <p class="card-title">सनातन हिंदू</p>
+                  <p class="card-subtitle">पहचान पत्र</p>
+                </div>
+                <p class="card-number">ID No. <span id="previewCardNumber"></span></p>
+              </div>
+
+              <div class="front-card-body">
+                <div class="photo-frame">
+                  <img id="previewPhoto" alt="Uploaded portrait preview" />
+                  <span id="photoEmpty">Upload photo</span>
+                </div>
+
+                <dl class="identity-list">
+                  <div>
+                    <dt>Name</dt>
+                    <dd id="previewName">Not entered</dd>
+                  </div>
+                  <div>
+                    <dt>Father's Name</dt>
+                    <dd id="previewFatherName">Not entered</dd>
+                  </div>
+                  <div>
+                    <dt>Mobile</dt>
+                    <dd id="previewMobile">Not entered</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div class="card-footer">Cultural Identity Card</div>
+            </article>
+
+            <article class="id-card back-card" aria-label="Back side ID card preview">
+              <div class="card-header compact">
+                <div class="card-logo small" aria-hidden="true">ॐ</div>
+                <div>
+                  <p class="card-title">सनातन हिंदू</p>
+                  <p class="card-subtitle">Address details</p>
+                </div>
+              </div>
+
+              <div class="address-box">
+                <p class="address-label">Address</p>
+                <p id="previewAddress" class="address-text">Not entered</p>
+              </div>
+
+              <div class="back-footer">
+                <span id="previewBackCardNumber">ID No.</span>
+                <span id="previewBackMobile">Mobile: Not entered</span>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="district-data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
